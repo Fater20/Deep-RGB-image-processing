@@ -219,7 +219,9 @@ try:
             cv2.circle(imgResult, tuple(map(int,list(rect[0]))), 2, (255, 0, 0), 2)
             
             print(list(map(int,list(rect[0]))))
-            print(measure(depth_image, list(map(int,list(rect[0]))), depth_scale))
+            distance = measure(depth_image, list(map(int,list(rect[0]))), depth_scale)
+            cv2.putText(imgResult,str(int(distance*100))+"cm",(2050),cv2.FONT_HERSHEY_COMPLEX,2,(0,0,255),2)
+            print(distance)
             
         
         # Render images:
@@ -229,8 +231,9 @@ try:
 
         imgStack = stackImages(0.5,([color_image, imgResult],[bg_removed, image_hsv],[opening_mask,depth_colormap]))
 
-        cv2.namedWindow('Depth Filter and Color locate', cv2.WINDOW_AUTOSIZE)
-        cv2.imshow('Depth Filter and Color locate', imgStack)
+        cv2.namedWindow('Locate color and Measure distance', cv2.WINDOW_AUTOSIZE)
+        
+        cv2.imshow('Locate color and Measure distance', imgStack)
 
         key = cv2.waitKey(1)
         # Press esc or 'q' to close the image window
