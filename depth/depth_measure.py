@@ -54,6 +54,22 @@ def stackImages(scale,imgArray):
         ver = hor
     return ver
 
+# Measure the distance from the target center to the camera 
+def measure(depth_image, center, depth_scale):
+    # Whether the center in the edge of the depth image
+    if(center[0]>0 & center[0]<639 & center[1]>0 & center[1]<479):
+        # Surrounding matrix
+        s_array = np.array([[-1, -1],[-1,0],[-1,1],[0, -1],[0,0],[0,1],[1, -1],[1,0],[1,1]])
+        
+        # Center surrounding matrix
+        cs_array = np.array(center)+s_array
+
+        # Measure the distance
+        distance = np.sum(depth_image[cs_array[:,1],cs_array[:,0]])/9 * depth_scale
+        return distance
+    
+    # Can not measure
+    return 0
 
 # Create a pipeline
 pipeline = rs.pipeline()
@@ -151,7 +167,8 @@ try:
         # Validate that both frames are valid
         if not aligned_depth_frame or not color_frame:
             continue
-
+        
+        # Transform depth_frame and color_frame to numpy array
         depth_image = np.asanyarray(aligned_depth_frame.get_data())
         color_image = np.asanyarray(color_frame.get_data())
 
@@ -166,7 +183,7 @@ try:
         # Transfer rgb to hsv
         image_hsv=cv2.cvtColor(bg_removed, cv2.COLOR_BGR2HSV)
 
-        # Generate mask
+        # Generate mask ( The HSV value of red has two ranges)
         #mask = cv2.inRange(image_hsv,lower,upper)
         mask1 = cv2.inRange(image_hsv,color_dist['red1']['lower'],color_dist['red1']['upper'])
         mask2 = cv2.inRange(image_hsv,color_dist['red2']['lower'],color_dist['red2']['upper'])
@@ -179,15 +196,30 @@ try:
         # Dilate image
         opening_mask = cv2.dilate(erode_mask, kernel, iterations=3)
 
+        # Find all the contours in the erode_mask
         contours, hierarchy = cv2.findContours(erode_mask.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        
         imgResult = color_image.copy()
+
+        # Whether the contour exist
         if np.size(contours)>0:
+            # Find the maximum contour
             c = max(contours, key=cv2.contourArea)
+
+            # Find the minimum enclosing rectangle
             rect = cv2.minAreaRect(c)
+
+            # Get the rectangle's four corner points
             box = cv2.boxPoints(rect)
+
+            # Draw the contour in red
             cv2.drawContours(imgResult, [np.int0(box)], -1, (0, 255, 255), 2)
+            
+            # Draw the center of the rectangle in blue
             cv2.circle(imgResult, tuple(map(int,list(rect[0]))), 2, (255, 0, 0), 2)
+            
             print(list(map(int,list(rect[0]))))
+            print(measure(depth_image, list(map(int,list(rect[0]))), depth_scale))
             
         
         # Render images:
