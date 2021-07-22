@@ -237,10 +237,10 @@ try:
             c_point = list(map(int,list(rect[0])))
             print(c_point)
             distance = measure(depth_image, c_point, depth_scale)
-            cv2.putText(imgResult,str(int(distance*100))+"cm",(2050),cv2.FONT_HERSHEY_COMPLEX,2,(0,0,255),2)
+            cv2.putText(imgResult,str(int(distance*100))+"cm",(20,50),cv2.FONT_HERSHEY_SIMPLEX,2,(0,0,255),2)
             print(distance)
-            send_data = "c_x: "+str(c_point[0])+"; c_y: "+str(c_point[0])+"d: "+str(int(distance*100))+"cm "
-            se.write(send_data)
+            send_data = "c_x: "+str(c_point[0])+"; c_y: "+str(c_point[0])+"; d: "+str(int(distance*100))+"cm "
+            se.write(send_data.encode('utf-8'))
             
         
         # Render images:
